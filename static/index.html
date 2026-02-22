@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Pattern Studio</title>
+    <!-- Use Outfit font for a premium modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-panel main-header">
+            <div class="logo-area">
+                <div class="logo-icon"></div>
+                <h1>LED Pattern Studio</h1>
+            </div>
+            <div class="hardware-status">
+                <span class="indicator"></span> Ready
+            </div>
+        </header>
+
+        <main class="main-grid">
+            <!-- Left: Editor -->
+            <section class="editor-section glass-panel">
+                <div class="section-header">
+                    <h2>Pattern Editor</h2>
+                    <span class="badge">16×96</span>
+                </div>
+                
+                <div class="editor-toolbar glass-inset">
+                    <div class="tool-group colors">
+                        <button class="color-btn active" data-color="0" style="--c: rgb(30,30,30);" title="Off/Erase"></button>
+                        <button class="color-btn" data-color="1" style="--c: var(--c-red);" title="Red"></button>
+                        <button class="color-btn" data-color="2" style="--c: var(--c-green);" title="Green"></button>
+                        <button class="color-btn" data-color="3" style="--c: var(--c-orange);" title="Orange"></button>
+                    </div>
+
+                    <div class="tool-divider"></div>
+
+                    <div class="tool-group input-group">
+                        <label>Brush</label>
+                        <input type="range" id="brush-size" min="1" max="5" value="1">
+                        <span class="val-badge" id="brush-val">1px</span>
+                    </div>
+
+                    <div class="tool-divider"></div>
+
+                    <div class="tool-group input-group">
+                        <label>Zoom</label>
+                        <input type="range" id="zoom-scale" min="0.5" max="3" step="0.1" value="1.5">
+                        <span class="val-badge" id="zoom-val">1.5x</span>
+                    </div>
+                </div>
+
+                <div class="canvas-wrapper glass-inset" id="canvas-wrapper">
+                    <!-- LED resolution is 16 rows, 96 cols -->
+                    <div id="led-canvas" class="led-canvas"></div>
+                </div>
+
+                <div class="editor-actions">
+                    <input type="text" id="preset-name" placeholder="Name your preset..." class="glass-input">
+                    <button id="save-preset-btn" class="btn primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Save
+                    </button>
+                    <button id="clear-canvas-btn" class="btn secondary" title="Clear Canvas">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                    <button id="send-display-btn" class="btn accent">Send to Display</button>
+                </div>
+            </section>
+
+            <!-- Middle: Presets -->
+            <section class="presets-section glass-panel">
+                <div class="section-header">
+                    <h2>Library</h2>
+                    <span class="badge" id="preset-count">0</span>
+                </div>
+                <div id="presets-grid" class="presets-grid">
+                    <!-- Preset cards injected here -->
+                </div>
+            </section>
+
+            <!-- Right: Playlist -->
+            <section class="playlist-section glass-panel">
+                <div class="section-header playlist-header">
+                    <h2>Playlist</h2>
+                    <div class="playback-controls">
+                        <button id="play-btn" class="btn primary play-btn">▶ Play</button>
+                        <button id="stop-btn" class="btn secondary" disabled>⏹ Stop</button>
+                    </div>
+                </div>
+                
+                <div id="playlist-container" class="playlist-container glass-inset">
+                    <div class="playlist-empty-state">
+                        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        <span>Drag presets here</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- HTML5 Template for Preset Card -->
+    <template id="tpl-preset-card">
+        <div class="preset-card glass-inset" draggable="true">
+            <canvas class="preset-preview" width="96" height="16"></canvas>
+            <div class="preset-info">
+                <span class="preset-name"></span>
+                <button class="delete-preset-btn" title="Delete Preset">×</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- HTML5 Template for Playlist Item -->
+    <template id="tpl-playlist-item">
+        <div class="playlist-item glass-inset" draggable="true">
+            <div class="drag-handle">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line></svg>
+            </div>
+            <canvas class="playlist-thumb" width="96" height="16"></canvas>
+            <div class="playlist-item-details">
+                <span class="playlist-item-name"></span>
+                <div class="duration-control">
+                    <input type="number" class="duration-input glass-input" min="100" max="60000" step="100" title="Duration in ms">
+                    <span class="unit">ms</span>
+                </div>
+            </div>
+            <button class="remove-btn" title="Remove from Playlist">×</button>
+        </div>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>
