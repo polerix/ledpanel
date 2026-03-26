@@ -16,7 +16,7 @@
 ## 🌊 File Structure
 
 ```text
-LEDpanel/
+ledpanel/
 ├── server.py                # FastAPI Python Server
 ├── requirements.txt         # Server dependencies
 ├── data/
